@@ -1,4 +1,13 @@
-function [preamble] = pream_gener()
+function [preamble] = pream_gener(label)
+    if label == 1
+        [preamble] = pream_gener_WIN();
+    elseif label == 2
+        [preamble] = pream_gener_noWIN();
+    end
+end
+
+% with window
+function [preamble] = pream_gener_WIN()
 %pream_gener: To generator the preamble of the certain frame
 %              for power lines
 %   Reference: ITU-T G.9960 p89
@@ -73,3 +82,63 @@ function [preamble] = pream_gener()
 %}
 end
 
+% without window
+function [preamble] = pream_gener_noWIN()
+%pream_gener: To generator the preamble of the certain frame
+%              for power lines
+%   Reference: ITU-T G.9960 p89
+%input: 
+    global Fuc Fus beta Ndf Nhd Ngi Fsc N;
+    global N1 k1 N2 k2 N3 k3;   % for generatoring preamble
+    load pn192.mat; pn = pn192;
+% wrong understanding about structure of the preamble
+%{
+    %% do ifft
+    PRE1 = [pn,zeros(1,N/k1-length(pn))];
+    pre1 = ifft(PRE1,N/k1);  % time-domain payload
+    pre2 = - pre1;
+    pre3 = [];
+    %% adding cyclical extension to each preamble section
+    sec1 = [pre1(end-beta/2+1:end),repmat(pre1,1,N1),pre1(1:beta/2)];
+    sec2 = [pre2(end-beta/2+1:end),repmat(pre2,1,N2),pre2(1:beta/2)];
+    sec3 = [];
+    %}
+%% do ifft
+    PRE1 = zeros(1,N);
+    PRE1(1:k1:end) = [pn,zeros(1,N/k1-length(pn))];
+    pre1 = ifft(PRE1,N);   pre1 = pre1(1:N/k1);     pre1(1) = 0;    % time-domain payload
+    pre2 = - pre1;
+    pre3 = [];
+%% generate of the look-up table
+    TEMP = repmat(pre1,[1,4]).';  save 'TEMP.mat' 'TEMP';
+    looup_table = zeros(4*N/k1,N/k1);   looup_table(:,1) = fft(TEMP,4*N/k1);
+    for index = 2:N/k1
+         col = fft([TEMP(index:end);TEMP(1:index-1)],4*N/k1);
+         looup_table(:,index) = col;
+    end
+    save '.\4.Receiver\looup_table.mat' 'looup_table';
+%% adding cyclical extension to each preamble section
+    sec1 = [repmat(pre1,1,N1)];
+    sec2 = [repmat(pre2,1,N2)];
+    sec3 = [];
+%% obtain total preamble structure
+    len1 = 1.0*N/k1*N1;     len2 = 1.0*N/k2*N2;
+    preamble = zeros(len1+len2+beta,1);
+    preamble(1:len1) = sec1.';
+    preamble(len1+1:len1+len2) = sec2.';
+    preamble = [zeros(beta/2-1,1);preamble];
+% section three of preamble dosen't exist in power lines synchronization
+    %preamble(len1-2*beta+len2+1:end) = preamble(len1-2*beta+len2+1:end) + winSEC3;
+    % return value
+    %preamble
+%% display preamble structure in time domain
+    %{
+    figure;    hold on;
+    plot(abs(preamble));
+    set(gca,'xlim',[1,2800],'ylim',[0,0.02]);
+    xlabel('discrete time');
+    ylabel('amplitude');
+    title('preamble structure in time domain');
+    legend('preamble');
+%}
+end

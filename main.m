@@ -20,22 +20,22 @@ l = 10;
 % Channel effect
 global delay I0_dB int_CFO frc_CFO Ts Rs fcw_k;
 delay = floor(1.5 * N);
-int_CFO = 1; frc_CFO = 0.2;
-I0_dB = -12;
+int_CFO = 0; frc_CFO = 0;
+I0_dB = -2;
 Ts = 1.0/Fsc/N;
 Rs = Fsc * N;
 fcw_k = N/100;
 SNR = 10;
 % detection
-global coefficient;
+global coefficient slide;
 coefficient = 1/9;
-
+slide = N/k1/2;
 
 %% generate header and payload with PLC standards in ITU-T G.9960
 header = hea_gener();       % header of a certain frame
 payload = pay_gener();      % payload of a certain frame
 %% generate preamble for power lines with 50MHz
-pream = pream_gener();      % preamble of a certain frame
+pream = pream_gener(2);      % preamble of a certain frame
 frame = frame_gener(pream,header,payload);
 %% go through the certain power line with 50MHz
 recFrame = passChannel(frame,SNR);

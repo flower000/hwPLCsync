@@ -10,14 +10,11 @@ function [recframe] = passChannel(frame,SNR)
 %% CFO
     CFO = int_CFO+frc_CFO;
     cfFrame = deFrame.*exp(2*pi*1i*CFO*(0:length(deFrame)-1)'/ N);      % additive in time domain
-    
-%{
 %% NBI
-    nbiFrame = cfFrame + 10^(I0_dB/20)*exp(2*pi*1i*(0:length(cfFrame)-1)'*fcw_k/N);
+    nbiFrame = cfFrame + 10^(I0_dB/20)*exp(2*pi*1i*fcw_k*(0:length(cfFrame)-1)'/N);
 %% AWGN
     recframe = awgn(nbiFrame,SNR,'measured');
-% return receive frame 
-    %}
-    recframe = cfFrame;
+
+    %recframe = nbiFrame;
 end
 

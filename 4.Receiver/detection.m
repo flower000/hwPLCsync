@@ -3,9 +3,9 @@ function [est_time,est_fc] = detection(recFrame)
 %   
     global N1 k1 N2 k2 N3 k3;
 %% TOA(time of arrival) estimationL: SAC implementation
-    [auCorr,toa] = estTOA(recFrame);
+    [auCorr,toa] = estTOA(recFrame,4);
 %% coarse estimation of the frequency
-    [coaCFO] = estCFOcoar(auCorr,toa);
+    [coaCFO] = estCFOcoar(recFrame,auCorr,toa);
 %% fine estimation of the frequency
     [finCFO] = estCFOfine(recFrame,toa,coaCFO);      % use coaCFO to modify the data in 'long' symbols
 %% return value
